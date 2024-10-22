@@ -13,6 +13,7 @@ app.get("/test-connection", async (req, res) => {
 	try {
 		// Jalankan query SQL ke database PostgreSQL
 		const result = await pool.query("SELECT * FROM users");
+		console.log("yaha");
 		res.json(result.rows);
 	} catch (err) {
 		console.error(err);
