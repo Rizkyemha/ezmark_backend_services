@@ -5,7 +5,8 @@
 	"scripts": {
 		"start": "npx tsc -w",
 		"dev": "npx nodemon",
-		"build": "tsc"
+		"build": "tsc",
+		"test-services": "npx tsc ./src/services/utils.ts"
 	},
 	"author": "rizkyemha",
 	"license": "ISC",
