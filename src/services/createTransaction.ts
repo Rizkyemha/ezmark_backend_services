@@ -8,7 +8,7 @@ interface Payload {
 	transaction_type: string;
 	amount: number;
 	description: string;
-	transaction_date: Date | null | any;
+	transaction_date: Date | undefined;
 	status: string;
 }
 
@@ -35,7 +35,7 @@ const createTransaction = async (payload: Payload) => {
                 $5, 
                 $6, 
                 $7, 
-                ${!payload.transaction_date ? "DEFAULT" : "$8"},
+                $8,
                 $9
             ) RETURNING *`,
 			[
@@ -46,7 +46,7 @@ const createTransaction = async (payload: Payload) => {
 				payload.transaction_type,
 				payload.amount,
 				payload.description,
-				payload.transaction_date,
+				payload.transaction_date || "NOW()",
 				payload.status,
 			]
 		);
