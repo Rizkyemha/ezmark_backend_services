@@ -1,5 +1,11 @@
 import { Request, Response, Router } from "express";
+import {
+	getCategory_id,
+	getWallet_id,
+	getPaymentMethode_id,
+} from "../services/utils";
 import { getCacheId } from "../utils/cacheUserMap";
+import { createTransaction } from "../services/createTransaction";
 
 const TransactionRoutes: Router = Router();
 
@@ -8,9 +14,9 @@ TransactionRoutes.post(
 	async (req: Request, res: Response): Promise<void> => {
 		const { phone_number } = req.params;
 
-		const id = await getCacheId(phone_number); // memeriksa cache user
+		const user_id = await getCacheId(phone_number); // memeriksa cache user
 
-		if (id === "unregister") {
+		if (user_id === "unregister") {
 			res.status(200).send({
 				status: "error",
 				message: "Transaksi gagal",
@@ -29,25 +35,38 @@ TransactionRoutes.post(
 		const {
 			transaction_type,
 			amount,
-			description,
 			category,
 			payment_methode,
+			wallet,
 			status,
+			transaction_date,
+			description,
 		} = req.body;
 
 		try {
 			// Query untuk catat transaksi baru
 
+			const category_id = await getCategory_id(user_id, category);
+			const wallet_id = await getWallet_id(user_id, wallet);
+			const payment_methode_id = await getPaymentMethode_id(
+				user_id,
+				payment_methode
+			);
+
+			const transactions = await createTransaction({
+				user_id,
+				category_id,
+				payment_methode_id,
+				wallet_id,
+				transaction_type,
+				amount,
+				description,
+				transaction_date,
+				status,
+			});
+
 			res.status(200).send({
-				data: {
-					phone_number,
-					transaction_type,
-					amount,
-					description,
-					category,
-					payment_methode,
-					status,
-				},
+				data: transactions,
 			});
 		} catch (error) {
 			res.status(400).send({ message: "Transaksi gagal" });
