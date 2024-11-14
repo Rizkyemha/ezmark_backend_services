@@ -5,7 +5,7 @@ import {
 	getPaymentMethode_id,
 } from "../services/utils";
 import { getCacheId } from "../utils/cacheUserMap";
-import { createTransaction } from "../services/createTransaction";
+import { createTransaction } from "../services/transactions";
 
 const TransactionRoutes: Router = Router();
 
@@ -45,31 +45,25 @@ TransactionRoutes.post(
 
 		try {
 			// Query untuk catat transaksi baru
-
-			const category_id = await getCategory_id(user_id, category);
-			const wallet_id = await getWallet_id(user_id, wallet);
-			const payment_methode_id = await getPaymentMethode_id(
-				user_id,
-				payment_methode
-			);
-
 			const transactions = await createTransaction({
 				user_id,
-				category_id,
-				payment_methode_id,
-				wallet_id,
 				transaction_type,
 				amount,
-				description,
-				transaction_date,
+				category,
+				payment_methode,
+				wallet,
 				status,
+				transaction_date,
+				description,
 			});
 
 			res.status(200).send({
 				data: transactions,
 			});
-		} catch (error) {
-			res.status(400).send({ message: "Transaksi gagal" });
+		} catch (error: any) {
+			res.status(400).send({
+				message: `Transaksi gagal karena : ${error.message}`,
+			});
 		}
 	}
 );

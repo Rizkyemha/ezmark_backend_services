@@ -1,4 +1,7 @@
 import pool from "../utils/db";
+import { createCatregory } from "./categories";
+import { createWallet } from "./wallets";
+import { createPaymentMethod } from "./payment_methods";
 
 const findUserIdByPhoneNumber = async (phone_number: string) => {
 	try {
@@ -13,18 +16,19 @@ const findUserIdByPhoneNumber = async (phone_number: string) => {
 
 		const { id } = userId.rows[0];
 		return id;
-	} catch (error) {
-		console.log(error); // Log error untuk debugging
+	} catch (error: any) {
+		console.log(error.message); // Log error untuk debugging
 		return "unregister"; // Mengembalikan "unregister" saat terjadi error
 	}
 };
 
 const getCategory_id = async (
 	user_id: string,
+	client: any = pool,
 	category: string
 ): Promise<string> => {
 	try {
-		const result = await pool.query(
+		const result = await client.query(
 			`SELECT id FROM categories WHERE user_id = $1 AND category_name ILIKE $2`,
 			[user_id, category]
 		);
@@ -32,24 +36,25 @@ const getCategory_id = async (
 		if (result.rows.length > 0) {
 			return result.rows[0].id; // Kembalikan id jika sudah ada
 		} else {
-			const insertResult = await pool.query(
-				`INSERT INTO categories (user_id, category_name) VALUES ($1, $2) RETURNING id`,
-				[user_id, category.toUpperCase()]
-			);
-			return insertResult.rows[0].id; // Kembalikan id dari data baru
+			const result = await createCatregory(user_id, client, {
+				category,
+				description: `Transaksi yang pembayarannya bersifat tunai ${category}`,
+			});
+			return result; // Kembalikan id dari data baru
 		}
-	} catch (error) {
+	} catch (error: any) {
 		console.log("Error inserting transaction:", error);
-		throw error;
+		throw new Error(error.message);
 	}
 };
 
 const getWallet_id = async (
 	user_id: string,
+	client: any = pool,
 	wallet: string
 ): Promise<string> => {
 	try {
-		const result = await pool.query(
+		const result = await client.query(
 			`SELECT id FROM wallets WHERE user_id = $1 AND wallet_name ILIKE $2`,
 			[user_id, wallet]
 		);
@@ -57,11 +62,8 @@ const getWallet_id = async (
 		if (result.rows.length > 0) {
 			return result.rows[0].id; // Kembalikan id jika sudah ada
 		} else {
-			const insertResult = await pool.query(
-				`INSERT INTO wallets (user_id, wallet_name) VALUES ($1, $2) RETURNING id`,
-				[user_id, wallet.toUpperCase()]
-			);
-			return insertResult.rows[0].id; // Kembalikan id dari data baru
+			const result = await createWallet(user_id, pool, { wallet });
+			return result; // Kembalikan id dari data baru
 		}
 	} catch (error) {
 		console.log("Error inserting transaction:", error);
@@ -71,10 +73,11 @@ const getWallet_id = async (
 
 const getPaymentMethode_id = async (
 	user_id: string,
+	client: any = pool,
 	payment_methode: string
 ): Promise<string> => {
 	try {
-		const result = await pool.query(
+		const result = await client.query(
 			`SELECT id FROM payment_methods WHERE user_id = $1 AND payment_name ILIKE $2`,
 			[user_id, payment_methode]
 		);
@@ -82,11 +85,11 @@ const getPaymentMethode_id = async (
 		if (result.rows.length > 0) {
 			return result.rows[0].id; // Kembalikan id jika sudah ada
 		} else {
-			const insertResult = await pool.query(
-				`INSERT INTO payment_methods (user_id, payment_name) VALUES ($1, $2) RETURNING id`,
-				[user_id, payment_methode.toUpperCase()]
-			);
-			return insertResult.rows[0].id; // Kembalikan id dari data baru
+			const result = createPaymentMethod(user_id, client, {
+				payment_name: payment_methode,
+				description: `Transaksi yang pembayarannya bersifat tunai ${payment_methode}`,
+			});
+			return result; // Kembalikan id dari data baru
 		}
 	} catch (error) {
 		console.log("Error inserting transaction:", error);
